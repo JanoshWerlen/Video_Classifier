@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Video Classification</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <h1>Footwear Classification</h1>
+        <p>DeepJavaLibrary (DJL) Demonstration by mosa</p>
+
+        <form>
+            <div class="form-group">
+                <label for="image">Bitte Bild hochladen (jpeg, png)</label>
+                <input type="file" accept="image/png, image/jpeg" class="form-control-file" id="image" name="image"
+                    onchange="checkFiles(this.files);">
+            </div>
+        </form>
+
+        <form>
+            <div class="form-group">
+                <label for="video">Bitte Video hochladen (mp4)</label>
+                <input type="file" accept="video/mp4" class="form-control-file" id="video" name="video"
+                    onchange="checkVideo(this.files);">
+            </div>
+        </form>
+
+        <div id="answerPart" style="visibility: hidden;">
+            <p><strong>Results for high Probability:</strong></p>
+            <div id="answerYes"></div>
+            <div id="answerNo"></div>
+        </div>
+
+        <!-- Preview part seems unused for videos, ensure its usage or remove if not needed -->
+        <div id="previewPart" style="display: none;">
+            <p><strong>Analyzed Image:</strong></p>
+            <img id="preview" width="300" src="#" alt="Image preview will be shown here when uploaded." />
+        </div>
+    </div>
+
+</body>
+
+</html>
