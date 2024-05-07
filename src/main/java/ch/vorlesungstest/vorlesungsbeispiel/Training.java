@@ -52,7 +52,7 @@ public final class Training {
         Path modelDir = Paths.get("models");
 
         // create ImageFolder dataset from directory
-        ImageFolder dataset = initDataset("streetsigndata-small");
+        ImageFolder dataset = initDataset("streetsigndata-small - Copy");
         // Split the dataset set into training dataset and validate dataset
         RandomAccessDataset[] datasets = dataset.randomSplit(8, 2);
 

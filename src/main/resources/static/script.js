@@ -35,13 +35,13 @@ function checkFiles(files) {
             const resultNo = data.find(d => d.className === "No");
 
             if (resultYes) {
-                answerYes.innerHTML = `Probability of 'Yes': ${(resultYes.probability * 100).toFixed(2)}%`;
+                answerYes.innerHTML = `Probability of 'Yes': ${(resultYes.probability * 100).toFixed(2)}`;
             } else {
                 answerYes.innerHTML = "Class 'Yes' not found.";
             }
 
             if (resultNo) {
-                answerNo.innerHTML = `Probability of 'No': ${(resultNo.probability * 100).toFixed(2)}%`;
+                answerNo.innerHTML = `Probability of 'No': ${(resultNo.probability * 100).toFixed(2)}`;
             } else {
                 answerNo.innerHTML = "Class 'No' not found.";
             }
@@ -93,8 +93,8 @@ function displayResults(data) {
     // Display results dynamically
     data.forEach(result => {
         const frameInfo = document.createElement('p');
-        frameInfo.textContent = `Frame: ${result.frame}, Probability of 'Yes': ${result.probability.toFixed(2)}%`;
-        if (result.probability > 0.98) {
+        frameInfo.textContent = `Frame: ${result.frame}, Probability of 'Yes': ${result.probability.toFixed(2)}`;
+        if (result.probability > 0.95) {
             answerYes.appendChild(frameInfo);
         } else {
             answerNo.appendChild(frameInfo);

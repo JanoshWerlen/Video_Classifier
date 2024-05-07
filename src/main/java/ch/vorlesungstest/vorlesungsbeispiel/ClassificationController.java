@@ -25,7 +25,7 @@ public class ClassificationController {
     private static final String TEMP_DIR = "tempVideos";
     private static final String HIGH_PROB_DIR = "HighProb_Frames";
     private static final String Frames_DIR = "Frames_Dir";
-    private static final double YES_PROBABILITY_THRESHOLD = 0.98; // 98% probability
+    private static final double YES_PROBABILITY_THRESHOLD = 0.95; // 98% probability
     private FrameExtractor extractor = new FrameExtractor();
 
     @GetMapping("/ping")
@@ -52,7 +52,7 @@ public class ClassificationController {
                 file.transferTo(tempFile);
                 System.out.println("Tempfile saved at: " + tempFile);
 
-                List<Path> frames = extractor.extractFrames(tempFile.toString(), 5, Frames_DIR);
+                List<Path> frames = extractor.extractFrames(tempFile.toString(), 0.2, Frames_DIR);
                 JSONArray resultsForHighProbYes = new JSONArray();
                 if (Paths.get(HIGH_PROB_DIR) != null && Files.exists(Paths.get(HIGH_PROB_DIR))) {
                     deleteDirectoryRecursively(Paths.get(HIGH_PROB_DIR));
@@ -70,6 +70,7 @@ public class ClassificationController {
                     JSONArray results = new JSONArray(jsonResult);
                     for (int i = 0; i < results.length(); i++) {
                         JSONObject result = results.getJSONObject(i);
+                        //System.out.println(result.getDouble("probability"));
                         if ("Yes".equals(result.getString("className"))
                                 && result.getDouble("probability") > YES_PROBABILITY_THRESHOLD) {
                             Path targetPath = highProbYesDir.resolve(framePath.getFileName());

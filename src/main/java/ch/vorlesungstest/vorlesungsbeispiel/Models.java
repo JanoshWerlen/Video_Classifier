@@ -27,14 +27,14 @@ import java.util.List;
 public final class Models {
 
     // the number of classification labels: boots, sandals, shoes, slippers
-    public static final int NUM_OF_OUTPUT = 4;
+    public static final int NUM_OF_OUTPUT = 2;
 
     // the height and width for pre-processing of the image
     public static final int IMAGE_HEIGHT = 100;
     public static final int IMAGE_WIDTH = 100;
 
     // the name of the model
-    public static final String MODEL_NAME = "shoeclassifier";
+    public static final String MODEL_NAME = "shoeclassifier_2";
 
     private Models() {}
 
@@ -57,7 +57,7 @@ public final class Models {
     }
 
     public static void saveSynset(Path modelDir, List<String> synset) throws IOException {
-        Path synsetFile = modelDir.resolve("synset.txt");
+        Path synsetFile = modelDir.resolve("synset_2.txt");
         try (Writer writer = Files.newBufferedWriter(synsetFile)) {
             writer.write(String.join("\n", synset));
         }

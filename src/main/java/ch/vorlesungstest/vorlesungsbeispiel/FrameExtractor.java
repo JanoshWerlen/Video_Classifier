@@ -6,13 +6,12 @@ import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import com.github.kokorin.jaffree.StreamType;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+
+
 public class FrameExtractor {
 
     public List<Path> extractFrames(String videoFile, double frameIntervalSeconds, String outputDirectory) {
