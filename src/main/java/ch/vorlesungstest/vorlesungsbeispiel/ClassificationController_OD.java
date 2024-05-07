@@ -9,23 +9,38 @@ import java.nio.file.StandardCopyOption;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import ai.djl.modality.Classifications.Classification;
+import ai.djl.modality.cv.output.DetectedObjects;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-public class ClassificationController {
+public class ClassificationController_OD {
 
-    private Inference inference = new Inference();
-    private ObjectDetection ObjectDetection = new ObjectDetection();
-    private static final String TEMP_DIR = "tempVideos";
-    private static final String HIGH_PROB_DIR = "HighProb_Frames";
-    private static final String Frames_DIR = "Frames_Dir";
+    //private Inference inference = new Inference();
+    private String searchObject = "car";
+
+    @Autowired
+    private ObjectDetection ObjectDetection;
+
+    private static final String TEMP_DIR = "src\\main\\resources\\static\\tempVideos";
+    private static final String HIGH_PROB_DIR = "src\\main\\resources\\static\\HighProb_Frames";
+    private static final String Frames_DIR = "src\\main\\resources\\static\\Frames_Dir";
     private static final double YES_PROBABILITY_THRESHOLD = 0.95; // 98% probability
     private FrameExtractor extractor = new FrameExtractor();
 
@@ -54,7 +69,7 @@ public class ClassificationController {
                 file.transferTo(tempFile);
                 System.out.println("Tempfile saved at: " + tempFile);
 
-                List<Path> frames = extractor.extractFrames(tempFile.toString(), 0.2, Frames_DIR);
+                List<Path> frames = extractor.extractFrames(tempFile.toString(), 2, Frames_DIR);
                 JSONArray resultsForHighProbYes = new JSONArray();
                 if (Paths.get(HIGH_PROB_DIR) != null && Files.exists(Paths.get(HIGH_PROB_DIR))) {
                     deleteDirectoryRecursively(Paths.get(HIGH_PROB_DIR));
@@ -68,18 +83,16 @@ public class ClassificationController {
                 for (Path framePath : frames) {
 
                     byte[] imageData = Files.readAllBytes(framePath);
-                    String jsonResult = inference.predict(imageData).toJson();
+                    String jsonResult = ObjectDetection.predict(imageData).toJson();
+                    
                     JSONArray results = new JSONArray(jsonResult);
                     for (int i = 0; i < results.length(); i++) {
                         JSONObject result = results.getJSONObject(i);
                         //System.out.println(result.getDouble("probability"));
-                        if ("Yes".equals(result.getString("className"))
-                                && result.getDouble("probability") > YES_PROBABILITY_THRESHOLD) {
+                        if (searchObject.equals(result.getString("className"))) {
                             Path targetPath = highProbYesDir.resolve(framePath.getFileName());
                             Files.copy(framePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                            resultsForHighProbYes.put(new JSONObject()
-                                    .put("frame", framePath.getFileName().toString())
-                                    .put("probability", result.getDouble("probability")));
+                            resultsForHighProbYes.put(result);
                             count++;
                             System.out.println(count);
                         }
@@ -97,7 +110,7 @@ public class ClassificationController {
                 // deleteDirectoryRecursively(highProbYesDir);
                 deleteDirectoryRecursively(Paths.get(Frames_DIR));
 
-                System.out.println(resultsForHighProbYes.length());
+                System.out.println("Amount of relevant Frames: " + resultsForHighProbYes.length());
                 return resultsForHighProbYes.toString();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -119,6 +132,40 @@ public class ClassificationController {
     }
 
 
-    
+    private ArrayList<Classification> check_relevant(DetectedObjects detection) {
+
+        ArrayList<Classification> x = new ArrayList<>();
+        // Iterate through all detected objects
+        for (Classification obj : detection.items()) { // Ensure this matches the list type returned by
+                                                       // detection.items()
+            String className = obj.getClassName();
+            double probability = obj.getProbability();
+
+            // Log or check the className
+            // logger.info("Class: {}, Probability: {}", className, probability);
+
+            // Example check
+            if (className.equals(searchObject)) {
+               // logger.info("Detected a person with probability: {}", probability);
+                x.add(obj);
+            }
+        }
+        return x;
+    }
+
+    @GetMapping("/getFrames")
+    public ResponseEntity<List<String>> getFramePaths() {
+        try {
+            Path framesDir = Paths.get("src\\main\\resources\\static\\HighProb_Frames");
+            List<String> fileNames = Files.walk(framesDir)
+                                         .filter(Files::isRegularFile)
+                                         .map(path -> path.getFileName().toString())
+                                         .collect(Collectors.toList());
+            return ResponseEntity.ok(fileNames);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 }

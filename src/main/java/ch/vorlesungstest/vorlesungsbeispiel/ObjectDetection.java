@@ -27,12 +27,18 @@ import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Component;
 
+@Component
 public final class ObjectDetection {
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
 
-    ObjectDetection() {}  // Constructor should not contain logic
+    public ObjectDetection() {
+    
+    } // Constructor should not contain logic
 
     public DetectedObjects predict(byte[] imageData) throws IOException, ModelException, TranslateException {
         InputStream is = new ByteArrayInputStream(imageData);
@@ -47,49 +53,30 @@ public final class ObjectDetection {
                 .build();
 
         try (ZooModel<Image, DetectedObjects> model = ModelZoo.loadModel(criteria);
-             Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
+                Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
             saveBoundingBoxImage(img, detection);
             logger.info("Object Detected and Bounding Box placed");
             System.out.println(detection);
-            ArrayList<Classification> dogs = check_relevant(detection);
-            System.out.println(dogs.size() + " dogs have been detected");
+            //ArrayList<Classification> dogs = check_relevant(detection);
+           // System.out.println(dogs.size() + " dogs have been detected");
             return detection;
         }
     }
 
-    private static void saveBoundingBoxImage(Image img, DetectedObjects detection)
+    private void saveBoundingBoxImage(Image img, DetectedObjects detection)
             throws IOException {
         Path outputDir = Paths.get("build/output");
         Files.createDirectories(outputDir);
-
         img.drawBoundingBoxes(detection);
 
         Path imagePath = outputDir.resolve("detected-dog_bike_car.png");
-        img.save(Files.newOutputStream(imagePath), "png");  // Saving as PNG
-        logger.info("Detected objects image has been saved in: {}", imagePath);
+
+        //Code here 
+
+        img.save(Files.newOutputStream(imagePath), "png"); // Saving as PNG
+        //logger.info("Detected objects image has been saved in: {}", imagePath);
     }
 
-
-    private ArrayList<Classification> check_relevant(DetectedObjects detection) {
-
-        ArrayList<Classification> x = new ArrayList<>();
-        // Iterate through all detected objects
-        for (Classification obj : detection.items()) {  // Ensure this matches the list type returned by detection.items()
-            String className = obj.getClassName();
-            double probability = obj.getProbability();
-    
-            // Log or check the className
-            //logger.info("Class: {}, Probability: {}", className, probability);
-    
-            // Example check
-            if (className.equals("dog")) {
-                logger.info("Detected a dog with probability: {}", probability);
-                x.add(obj);
-            }
-        }return x;
-    }
-    
-    
 
 }

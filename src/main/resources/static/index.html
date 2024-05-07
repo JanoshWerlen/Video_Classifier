@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="script.js" defer></script>
+    <script src="script.js" defer>  getFrames();</script>
     <style>
 
 .result-item {
@@ -15,6 +15,34 @@
     margin-bottom: 10px;
     background-color: #f9f9f9;
 }
+
+#answerPart {
+    display: flex;
+    flex-direction: column;
+}
+
+#JSON_Display {
+    width: 50%; /* Adjust the width as needed */
+    border: 1px solid #ccc; /* Optional: adds border around the JSON box */
+    padding: 10px;
+    overflow-y: auto; /* Enables scrolling if content is too long */
+}
+#frameContainer {
+    width: 500px; /* Width of the image container */
+    height: 300px; /* Height of the image container */
+    overflow: hidden; /* Keeps the image within the bounds of the container */
+    display: flex;
+    justify-content: center; /* Center image horizontally */
+    align-items: center; /* Center image vertically */
+    border: 1px solid #ccc; /* Optional: adds a border around the container */
+}
+
+#frameContainer img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Ensures the image is scaled to fit, not cropped */
+}
+
 
     </style>
 
@@ -49,11 +77,18 @@
 
         <div id="answerPart" style="visibility: visible;">
             <p><strong>Results for high Probability:</strong></p>
-            <div id="JSON_Display"></div>
-
-
+            <div style="display: flex; align-items: flex-start;">
+                <div id="JSON_Display" style="margin-right: 20px;">
+                    <!-- JSON content goes here -->
+                </div>
+                <div id="frameContainer" style="width: 500px; height: 300px;">
+                    <!-- Image will be placed here -->
+                </div>
+            </div>
         </div>
+        
 
+ 
         <!-- Preview part seems unused for videos, ensure its usage or remove if not needed -->
         <div id="previewPart" style="display: none;">
             <p><strong>Analyzed Image:</strong></p>
@@ -62,7 +97,5 @@
     </div>
 
 </body>
-
-
 
 </html>
