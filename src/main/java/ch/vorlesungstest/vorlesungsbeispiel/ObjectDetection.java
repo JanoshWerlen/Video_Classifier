@@ -34,49 +34,58 @@ import org.springframework.stereotype.Component;
 @Component
 public final class ObjectDetection {
 
-    private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
+    private final SimpMessagingTemplate template;
 
-    public ObjectDetection() {
-    
+    private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
+    private static int count = 0;
+
+    public ObjectDetection(SimpMessagingTemplate template) {
+        this.template = template;
     } // Constructor should not contain logic
 
-    public DetectedObjects predict(byte[] imageData) throws IOException, ModelException, TranslateException {
+    public DetectedObjects predict(byte[] imageData, String targetClass, double probabilityThreshold) throws IOException, ModelException, TranslateException {
         InputStream is = new ByteArrayInputStream(imageData);
         BufferedImage bi = ImageIO.read(is);
         Image img = ImageFactory.getInstance().fromImage(bi);
-
+    
         Criteria<Image, DetectedObjects> criteria = Criteria.builder()
                 .optApplication(Application.CV.OBJECT_DETECTION)
                 .setTypes(Image.class, DetectedObjects.class)
                 .optFilter("backbone", "resnet50")
                 .optProgress(new ProgressBar())
                 .build();
-
+    
         try (ZooModel<Image, DetectedObjects> model = ModelZoo.loadModel(criteria);
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
-            saveBoundingBoxImage(img, detection);
-            logger.info("Object Detected and Bounding Box placed");
-            System.out.println(detection);
-            //ArrayList<Classification> dogs = check_relevant(detection);
-           // System.out.println(dogs.size() + " dogs have been detected");
+            saveBoundingBoxImage(img, detection, targetClass, probabilityThreshold);
+            logger.info("Object Detection processing completed.");
             return detection;
         }
     }
+    
 
-    private void saveBoundingBoxImage(Image img, DetectedObjects detection)
-            throws IOException {
-        Path outputDir = Paths.get("build/output");
-        Files.createDirectories(outputDir);
-        img.drawBoundingBoxes(detection);
+    private void saveBoundingBoxImage(Image img, DetectedObjects detection, String targetClass, double probabilityThreshold)
+        throws IOException {
+    Path outputDir = Paths.get("src\\main\\resources\\static\\predict_img");
+    Files.createDirectories(outputDir);
+    img.drawBoundingBoxes(detection);
 
-        Path imagePath = outputDir.resolve("detected-dog_bike_car.png");
+    // Check each detected object to see if it matches the criteria
+    boolean shouldSave = detection.items().stream()
+        .anyMatch(item -> item.getClassName().equals(targetClass) && item.getProbability() > probabilityThreshold);
 
-        //Code here 
-
-        img.save(Files.newOutputStream(imagePath), "png"); // Saving as PNG
-        //logger.info("Detected objects image has been saved in: {}", imagePath);
+    if (shouldSave) {
+        count++;
+        Path imagePath = outputDir.resolve("detected-" + targetClass +" "+ count +".png");
+        img.save(Files.newOutputStream(imagePath), "png"); // Save the image if conditions are met
+        logger.info("Detected objects image has been saved in: {}", imagePath);
+        template.convertAndSend("/topic/imageUpdate", imagePath.toString());
+    } else {
+        logger.info("No objects meeting the criteria were detected.");
     }
+}
+
 
 
 }

@@ -33,7 +33,8 @@ import java.util.stream.Collectors;
 public class ClassificationController_OD {
 
     //private Inference inference = new Inference();
-    private String searchObject = "car";
+    private static final String searchObject = "car";
+    private static int fps = 5;
 
     @Autowired
     private ObjectDetection ObjectDetection;
@@ -41,7 +42,7 @@ public class ClassificationController_OD {
     private static final String TEMP_DIR = "src\\main\\resources\\static\\tempVideos";
     private static final String HIGH_PROB_DIR = "src\\main\\resources\\static\\HighProb_Frames";
     private static final String Frames_DIR = "src\\main\\resources\\static\\Frames_Dir";
-    private static final double YES_PROBABILITY_THRESHOLD = 0.95; // 98% probability
+    private static final double YES_PROBABILITY_THRESHOLD = 0.5; // 98% probability
     private FrameExtractor extractor = new FrameExtractor();
 
     @GetMapping("/ping")
@@ -51,8 +52,8 @@ public class ClassificationController_OD {
     @PostMapping(path = "/analyze")
     public String predict(@RequestParam("image") MultipartFile image) throws Exception {
         System.out.println(image);
-       // return inference.predict(image.getBytes()).toJson();
-        return ObjectDetection.predict(image.getBytes()).toJson();
+        // return inference.predict(image.getBytes()).toJson();
+        return ObjectDetection.predict(image.getBytes(), searchObject ,YES_PROBABILITY_THRESHOLD ).toJson();
     }
 
 
@@ -69,7 +70,7 @@ public class ClassificationController_OD {
                 file.transferTo(tempFile);
                 System.out.println("Tempfile saved at: " + tempFile);
 
-                List<Path> frames = extractor.extractFrames(tempFile.toString(), 2, Frames_DIR);
+                List<Path> frames = extractor.extractFrames(tempFile.toString(), fps, Frames_DIR);
                 JSONArray resultsForHighProbYes = new JSONArray();
                 if (Paths.get(HIGH_PROB_DIR) != null && Files.exists(Paths.get(HIGH_PROB_DIR))) {
                     deleteDirectoryRecursively(Paths.get(HIGH_PROB_DIR));
@@ -83,7 +84,7 @@ public class ClassificationController_OD {
                 for (Path framePath : frames) {
 
                     byte[] imageData = Files.readAllBytes(framePath);
-                    String jsonResult = ObjectDetection.predict(imageData).toJson();
+                    String jsonResult = ObjectDetection.predict(imageData, searchObject, YES_PROBABILITY_THRESHOLD).toJson();
                     
                     JSONArray results = new JSONArray(jsonResult);
                     for (int i = 0; i < results.length(); i++) {
