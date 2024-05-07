@@ -30,31 +30,16 @@ function checkFiles(files) {
     }).then(response => response.json())
         .then(data => {
             console.log(data); // Log the full data
-            // Correct the way to find results based on class name
-            const resultYes = data.find(d => d.className === "Yes");
-            const resultNo = data.find(d => d.className === "No");
-
-            if (resultYes) {
-                answerYes.innerHTML = `Probability of 'Yes': ${(resultYes.probability * 100).toFixed(2)}`;
-            } else {
-                answerYes.innerHTML = "Class 'Yes' not found.";
-            }
-
-            if (resultNo) {
-                answerNo.innerHTML = `Probability of 'No': ${(resultNo.probability * 100).toFixed(2)}`;
-            } else {
-                answerNo.innerHTML = "Class 'No' not found.";
-            }
+            document.getElementById('JSON_Display').innerHTML = JSON.stringify(data, null, 2); // pretty print JSON
 
         }).catch(error => {
             console.error('Error:', error);
-            answerYes.innerHTML = "Error processing the image.";
-            answerNo.innerHTML = "Error processing the image.";
+
         });
 }
 
 
-
+/*
 function checkVideo(files) {
     if (files.length === 1 && files[0].type === "video/mp4") {
         var videoFile = files[0];
@@ -87,8 +72,10 @@ function checkVideo(files) {
 function displayResults(data) {
     const answerYes = document.getElementById('answerYes');
     const answerNo = document.getElementById('answerNo');
+    const JSON = document.getElementById('JSON');
     answerYes.innerHTML = '';
     answerNo.innerHTML = '';
+    JSON.innerHTML = '';
 
     // Display results dynamically
     data.forEach(result => {
@@ -103,4 +90,4 @@ function displayResults(data) {
 
     // Show the answer section
     document.getElementById('answerPart').style.visibility = 'visible';
-}
+}*/

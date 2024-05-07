@@ -22,6 +22,7 @@ import java.util.List;
 public class ClassificationController {
 
     private Inference inference = new Inference();
+    private ObjectDetection ObjectDetection = new ObjectDetection();
     private static final String TEMP_DIR = "tempVideos";
     private static final String HIGH_PROB_DIR = "HighProb_Frames";
     private static final String Frames_DIR = "Frames_Dir";
@@ -35,7 +36,8 @@ public class ClassificationController {
     @PostMapping(path = "/analyze")
     public String predict(@RequestParam("image") MultipartFile image) throws Exception {
         System.out.println(image);
-        return inference.predict(image.getBytes()).toJson();
+       // return inference.predict(image.getBytes()).toJson();
+        return ObjectDetection.predict(image.getBytes()).toJson();
     }
 
 
