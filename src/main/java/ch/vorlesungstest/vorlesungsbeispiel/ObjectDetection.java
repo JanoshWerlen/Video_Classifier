@@ -3,6 +3,7 @@ package ch.vorlesungstest.vorlesungsbeispiel;
 import ai.djl.Application;
 import ai.djl.ModelException;
 import ai.djl.inference.Predictor;
+import ai.djl.modality.Classifications.Classification;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
@@ -16,11 +17,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import javax.imageio.ImageIO;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +52,8 @@ public final class ObjectDetection {
             saveBoundingBoxImage(img, detection);
             logger.info("Object Detected and Bounding Box placed");
             System.out.println(detection);
+            ArrayList<Classification> dogs = check_relevant(detection);
+            System.out.println(dogs.size() + " dogs have been detected");
             return detection;
         }
     }
@@ -64,4 +69,27 @@ public final class ObjectDetection {
         img.save(Files.newOutputStream(imagePath), "png");  // Saving as PNG
         logger.info("Detected objects image has been saved in: {}", imagePath);
     }
+
+
+    private ArrayList<Classification> check_relevant(DetectedObjects detection) {
+
+        ArrayList<Classification> x = new ArrayList<>();
+        // Iterate through all detected objects
+        for (Classification obj : detection.items()) {  // Ensure this matches the list type returned by detection.items()
+            String className = obj.getClassName();
+            double probability = obj.getProbability();
+    
+            // Log or check the className
+            //logger.info("Class: {}, Probability: {}", className, probability);
+    
+            // Example check
+            if (className.equals("dog")) {
+                logger.info("Detected a dog with probability: {}", probability);
+                x.add(obj);
+            }
+        }return x;
+    }
+    
+    
+
 }
