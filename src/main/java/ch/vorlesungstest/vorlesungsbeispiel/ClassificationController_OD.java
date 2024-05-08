@@ -42,25 +42,11 @@ public class ClassificationController_OD {
     private ObjectDetection ObjectDetection;
 
     private static final String TEMP_DIR = "src\\main\\resources\\static\\tempVideos";
-    private static final String HIGH_PROB_DIR = "src\\main\\resources\\static\\HighProb_Frames";
     private static final String Frames_DIR = "src\\main\\resources\\static\\Frames_Dir";
 
     private FrameExtractor extractor = new FrameExtractor();
 
-    /*
-     * @PostMapping("/setSearchObject")
-     * public ResponseEntity<String> setSearchObject(@RequestParam("searchObject")
-     * HttpServletRequest request) {
-     * HttpSession session = request.getSession();
-     * session.removeAttribute("searchObject"); // Remove the current setting
-     * session.setAttribute("searchObject", searchObject); // Set the new value
-     * 
-     * session.setAttribute("searchObject", searchObject); // Manually setting the
-     * session attribute
-     * return ResponseEntity.ok("Search object set to: " + searchObject);
-     * }
-     */
-    @GetMapping("/ping")
+     @GetMapping("/ping")
     public String ping() {
         return "Classification app is up and running!";
     }
@@ -71,7 +57,9 @@ public class ClassificationController_OD {
         // System.out.println("Session ID: " + request.getSession().getId() + " -
         // Current searchObject: " + searchObject);
         if (image.isEmpty()) {
+            System.out.println("Picture is empty");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\": \"Empty file.\"}");
+            
         }
 
         try {
@@ -86,7 +74,16 @@ public class ClassificationController_OD {
             JSONObject json = new JSONObject();
             json.put("detections", detections);
             json.put("imagePath", result.getImagePath());
+            System.out.println("\n");
+            System.out.println("detection: " + detections);
+            System.out.println("imagePath " + result.getImagePath());
+            System.out.println("Json " + json);
+
+            System.out.println("\n");
+
+            VorlesungsbeispielApplication.notifyWebSocketServer();
             return ResponseEntity.ok(json.toString());
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -154,6 +151,7 @@ public Map<String, Integer> handleFileUpload(@RequestParam("video") MultipartFil
             }
         }
 
+        cleanUpResources(tempFile);
         // Print the class name counts
         for (Map.Entry<String, Integer> entry : classNameCounts.entrySet()) {
             System.out.println("ClassName: " + entry.getKey() + ", Amount: " + entry.getValue());

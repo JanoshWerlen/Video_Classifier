@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,17 +41,12 @@ import org.apache.http.util.EntityUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.HttpResponse;
 
-
-
 @Component
 public final class ObjectDetection {
 
     private final SimpMessagingTemplate template;
- 
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
-    private static int count = 0;
-
 
     public ObjectDetection(SimpMessagingTemplate template) {
         this.template = template;
@@ -84,7 +80,7 @@ public final class ObjectDetection {
         }
     }
 
-    private String saveBoundingBoxImage(Image img, DetectedObjects detection, String[] targetClass,
+    synchronized private String saveBoundingBoxImage(Image img, DetectedObjects detection, String[] targetClass,
             double probabilityThreshold)
             throws IOException {
         List<String> targetClassList = Arrays.asList(targetClass);
@@ -102,12 +98,10 @@ public final class ObjectDetection {
 
         Path displayPath = displayDir.resolve("display.png"); // Always the same name for overwrite
         img.save(Files.newOutputStream(displayPath), "png");
-        
-
 
         if (shouldSave) {
-            count++;
-            Path imagePath = outputDir.resolve("detected-" + count + ".png");
+            String uniqueID = UUID.randomUUID().toString();
+            Path imagePath = outputDir.resolve("detected-" + uniqueID + ".png");
 
             img.save(Files.newOutputStream(imagePath), "png");
 
@@ -130,6 +124,5 @@ public final class ObjectDetection {
             System.out.println("Deleted directory: " + directory);
         }
     }
-
 
 }

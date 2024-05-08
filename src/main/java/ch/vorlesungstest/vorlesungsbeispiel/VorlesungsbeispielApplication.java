@@ -17,7 +17,7 @@ public class VorlesungsbeispielApplication {
     private static WebSocketNotifyClient client;
 
     public static void main(String[] args) {
-        startNodeServer();
+        //startNodeServer();
 
         SpringApplication.run(VorlesungsbeispielApplication.class, args);
 
@@ -36,7 +36,7 @@ public class VorlesungsbeispielApplication {
             System.out.println("WebSocket is not connected.");
         }
     }
-
+/* 
     private static void startNodeServer() {
     try {
         // Adjust the path to where your server.js file is located
@@ -74,6 +74,6 @@ public class VorlesungsbeispielApplication {
         e.printStackTrace();
         System.out.println("Failed to start node server.");
     }
-}
+}*/
 
 }

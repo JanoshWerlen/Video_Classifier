@@ -162,6 +162,8 @@ function checkVideo(files) {
     
 }
 function displayResults(data) {
+
+    console.log("Logged data: " + data.imagePath)
     const resultsContainer = document.getElementById('JSON_Display');
     const imageContainer = document.getElementById('frameContainer');
     resultsContainer.innerHTML = ''; // Clear previous results
@@ -198,39 +200,6 @@ function displayData(data) {
         resultItem.textContent = `${key}: ${data[key]}`;
         resultsDiv.appendChild(resultItem);
     });}
-
-
-
-
-
-
-
-var stompClient = null;
-
-function connect() {
-    var socket = new SockJS('/ws');
-    stompClient = Stomp.over(socket);
-    stompClient.connect({}, function (frame) {
-        console.log('Connected: ' + frame);
-        stompClient.subscribe('/topic/imageUpdate', function (imagePath) {
-            updateImage(imagePath.body);
-        });
-    });
-}
-
-function getFrames() {
-    fetch('/getFrames')
-        .then(response => response.json())
-        .then(files => {
-            const container = document.getElementById('frameContainer');
-            files.forEach(file => {
-                const img = document.createElement('img');
-                img.src = `/HighProb_Frames/${file}`; // Adjust path as necessary
-                container.appendChild(img);
-            });
-        })
-        .catch(error => console.error('Error loading the frames:', error));
-};
 
 
 
