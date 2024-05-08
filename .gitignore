@@ -40,3 +40,5 @@ build/
 /models
 /HighProb_Frames
 /streetsigndata-small
+
+src/main/resources/static/node_modules/

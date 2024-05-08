@@ -29,16 +29,28 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.HttpResponse;
+
+
 
 @Component
 public final class ObjectDetection {
 
     private final SimpMessagingTemplate template;
+ 
 
     private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
     private static int count = 0;
+
 
     public ObjectDetection(SimpMessagingTemplate template) {
         this.template = template;
@@ -67,6 +79,7 @@ public final class ObjectDetection {
             DetectedObjects detection = predictor.predict(img);
             String imagePath = saveBoundingBoxImage(img, detection, targetClass, probabilityThreshold);
             logger.info("Object Detection processing completed.");
+            VorlesungsbeispielApplication.notifyWebSocketServer();
             return new DetectionResult(detection, imagePath);
         }
     }
@@ -76,18 +89,28 @@ public final class ObjectDetection {
             throws IOException {
         List<String> targetClassList = Arrays.asList(targetClass);
         Path outputDir = Paths.get("src/main/resources/static/predict_img");
-        deleteDirectoryRecursively(outputDir);
+        Path displayDir = Paths.get("src/main/resources/static/display");
+        // Ensure directory for output images exists
         Files.createDirectories(outputDir);
+        // Ensure directory for displayed images exists
+        Files.createDirectories(displayDir);
         img.drawBoundingBoxes(detection);
 
         boolean shouldSave = detection.items().stream()
                 .anyMatch(item -> targetClassList.contains(item.getClassName())
                         && item.getProbability() > probabilityThreshold);
 
+        Path displayPath = displayDir.resolve("display.png"); // Always the same name for overwrite
+        img.save(Files.newOutputStream(displayPath), "png");
+        
+
+
         if (shouldSave) {
             count++;
             Path imagePath = outputDir.resolve("detected-" + count + ".png");
+
             img.save(Files.newOutputStream(imagePath), "png");
+
             // Correct the image path to be web accessible
             String webPath = "/predict_img/" + imagePath.getFileName().toString();
             logger.info("Detected objects image has been saved in: {}", imagePath);
@@ -107,5 +130,6 @@ public final class ObjectDetection {
             System.out.println("Deleted directory: " + directory);
         }
     }
+
 
 }

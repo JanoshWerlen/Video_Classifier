@@ -31,6 +31,8 @@ import java.util.Map;
 // @SessionAttributes("searchObject")
 public class ClassificationController_OD {
 
+    
+
     // private Inference inference = new Inference();
     private static int fps = 5;
     private static final double YES_PROBABILITY_THRESHOLD = 0.5; // 0.5 = 50% probability
@@ -64,7 +66,7 @@ public class ClassificationController_OD {
     }
 
     @PostMapping(path = "/analyze")
-    public ResponseEntity<String> predict(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<?> predict(@RequestParam("image") MultipartFile image) {
 
         // System.out.println("Session ID: " + request.getSession().getId() + " -
         // Current searchObject: " + searchObject);
@@ -93,88 +95,77 @@ public class ClassificationController_OD {
     }
 
     @PostMapping("/upload_video")
-    public ResponseEntity<String> handleFileUpload(@RequestParam("video") MultipartFile file) throws IOException {
+public Map<String, Integer> handleFileUpload(@RequestParam("video") MultipartFile file) throws IOException {
 
-        // System.out.println("Session ID: " + request.getSession().getId() + " -
-        // Current searchObject: " + searchObject);
-
-        if (file.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"error\": \"Empty file.\"}");
-        }
-
-        Path tempFile = null;
-        try {
-            System.out.println("Received video file " + file.getSize());
-            Path tempDirPath = Paths.get(TEMP_DIR);
-            Files.createDirectories(tempDirPath);
-            tempFile = Files.createTempFile(tempDirPath, null, ".mp4");
-            file.transferTo(tempFile);
-
-            List<Path> frames = extractor.extractFrames(tempFile.toString(), fps, Frames_DIR);
-            JSONArray resultsForHighProb = new JSONArray();
-
-            deleteDirectoryRecursively(Paths.get(Frames_DIR));
-
-            for (Path framePath : frames) {
-                byte[] imageData = Files.readAllBytes(framePath);
-                try {
-
-                    DetectionResult detectionResult = ObjectDetection.predict(imageData, searchObject,
-                            YES_PROBABILITY_THRESHOLD);
-                    if (detectionResult == null || detectionResult.getDetectedObjects() == null
-                            || detectionResult.getImagePath() == null) {
-                        continue; // Skip this frame and continue with next
-                    }
-
-                    JSONArray detections = new JSONArray(detectionResult.getDetectedObjects().toJson());
-                    JSONObject frameResult = new JSONObject();
-                    frameResult.put("detections", detections);
-                    frameResult.put("imagePath", detectionResult.getImagePath());
-
-                    resultsForHighProb.put(frameResult);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    continue; // Log the error and continue processing other frames
-                }
-            }
-
-            System.out.println("Amount of detections: " + resultsForHighProb.length());
-
-            System.out.println("");
-            System.out.println(resultsForHighProb.toString());
-            System.out.println("");
-
-            Map<String, Integer> classNameCounts = new HashMap<>();
-
-            // Iterate through each detection result
-            for (int i = 0; i < resultsForHighProb.length(); i++) {
-                JSONObject detectionResult = resultsForHighProb.getJSONObject(i);
-                JSONArray detections = detectionResult.getJSONArray("detections");
-
-                // Iterate through each detection item
-                for (int j = 0; j < detections.length(); j++) {
-                    JSONObject detectionItem = detections.getJSONObject(j);
-                    String className = detectionItem.getString("className");
-
-                    // Update the count for the class name
-                    classNameCounts.put(className, classNameCounts.getOrDefault(className, 0) + 1);
-                }
-            }
-
-            // Print the class name counts
-            for (Map.Entry<String, Integer> entry : classNameCounts.entrySet()) {
-                System.out.println("ClassName: " + entry.getKey() + ", Amount: " + entry.getValue());
-            }
-
-            return ResponseEntity.ok(resultsForHighProb.toString()); // Return all results after loop
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"" + e.getMessage() + "\"}");
-        } finally {
-            cleanUpResources(tempFile);
-        }
+    if (file.isEmpty()) {
+        throw new IllegalArgumentException("Empty file provided.");
     }
+
+    Path tempFile = null;
+    try {
+        System.out.println("Received video file " + file.getSize());
+        Path tempDirPath = Paths.get(TEMP_DIR);
+        Files.createDirectories(tempDirPath);
+        tempFile = Files.createTempFile(tempDirPath, null, ".mp4");
+        file.transferTo(tempFile);
+
+        List<Path> frames = extractor.extractFrames(tempFile.toString(), fps, Frames_DIR);
+        JSONArray resultsForHighProb = new JSONArray();
+
+        for (Path framePath : frames) {
+            byte[] imageData = Files.readAllBytes(framePath);
+            try {
+
+                DetectionResult detectionResult = ObjectDetection.predict(imageData, searchObject,
+                        YES_PROBABILITY_THRESHOLD);
+                if (detectionResult == null || detectionResult.getDetectedObjects() == null
+                        || detectionResult.getImagePath() == null) {
+                    continue; // Skip this frame and continue with next
+                }
+
+                JSONArray detections = new JSONArray(detectionResult.getDetectedObjects().toJson());
+                JSONObject frameResult = new JSONObject();
+                frameResult.put("detections", detections);
+                frameResult.put("imagePath", detectionResult.getImagePath());
+
+                resultsForHighProb.put(frameResult);
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue; // Log the error and continue processing other frames
+            }
+        }
+
+        System.out.println("Amount of detections: " + resultsForHighProb.length());
+
+        Map<String, Integer> classNameCounts = new HashMap<>();
+
+        // Iterate through each detection result
+        for (int i = 0; i < resultsForHighProb.length(); i++) {
+            JSONObject detectionResult = resultsForHighProb.getJSONObject(i);
+            JSONArray detections = detectionResult.getJSONArray("detections");
+
+            // Iterate through each detection item
+            for (int j = 0; j < detections.length(); j++) {
+                JSONObject detectionItem = detections.getJSONObject(j);
+                String className = detectionItem.getString("className");
+
+                // Update the count for the class name
+                classNameCounts.put(className, classNameCounts.getOrDefault(className, 0) + 1);
+            }
+        }
+
+        // Print the class name counts
+        for (Map.Entry<String, Integer> entry : classNameCounts.entrySet()) {
+            System.out.println("ClassName: " + entry.getKey() + ", Amount: " + entry.getValue());
+        }
+
+        return classNameCounts;
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException("Failed to process video file.", e);
+    }
+}
+
 
     private void cleanUpResources(Path tempFile) throws IOException {
         if (tempFile != null && Files.exists(tempFile)) {

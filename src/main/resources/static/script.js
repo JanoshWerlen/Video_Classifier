@@ -22,6 +22,35 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+const socket = new WebSocket('ws://localhost:8000');
+
+socket.onmessage = function(event) {
+    console.log("WebSocket message received:", event.data);
+    if (event.data === 'update') {
+        updateImage();
+    }
+};
+
+function updateImage() {
+    const imgElement = document.getElementById('dynamicImage');
+    if (imgElement) {
+        const imageUrl = 'http://localhost:3000/display.png';
+        const timestamp = new Date().getTime(); // Cache busting
+        const newSrc = `${imageUrl}?${timestamp}`;
+        console.log('Updating image src to:', newSrc);  // Debugging log
+        imgElement.src = newSrc;
+    } else {
+        console.error('Element with ID "dynamicImage" was not found.');
+    }
+}
+
+
+
+// Call updateImage at regular intervals
+// Also call updateImage on page load
+document.addEventListener('DOMContentLoaded', updateImage);
+
+
 function updateSearchObject(searchObject) {
     const formData = new FormData();
     formData.append('searchObject', searchObject);
@@ -123,7 +152,7 @@ function checkVideo(files) {
     }).then(response => response.json())
     .then(data => {
         console.log(data)
-        displayResults(data, formData); // Function to display each JSON element separately
+        displayData(data); // Function to display each JSON element separately
     })
     .catch(error => {
         console.error('Error:', error);
@@ -158,6 +187,22 @@ function displayResults(data) {
         imageContainer.appendChild(img);
     }
 }
+
+function displayData(data) {
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.innerHTML = ''; // Clear previous results
+
+    // Create and append each key-value pair to the results div
+    Object.keys(data).forEach(key => {
+        const resultItem = document.createElement('div');
+        resultItem.textContent = `${key}: ${data[key]}`;
+        resultsDiv.appendChild(resultItem);
+    });}
+
+
+
+
+
 
 
 var stompClient = null;
