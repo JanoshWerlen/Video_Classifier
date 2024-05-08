@@ -14,6 +14,7 @@ import ai.djl.translate.TranslateException;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -40,16 +42,15 @@ public final class ObjectDetection {
 
     public ObjectDetection(SimpMessagingTemplate template) {
         this.template = template;
-    } // Constructor should not contain logic
+    }
 
     public DetectionResult predict(byte[] imageData, String[] targetClass, double probabilityThreshold)
             throws IOException, ModelException, TranslateException {
 
-                for (int i = 0; i < targetClass.length; i++) {
-                    System.out.println("looking for " + targetClass[i]);
-                }
-                
-                
+        for (int i = 0; i < targetClass.length; i++) {
+            System.out.println("looking for " + targetClass[i]);
+        }
+
         InputStream is = new ByteArrayInputStream(imageData);
         BufferedImage bi = ImageIO.read(is);
         Image img = ImageFactory.getInstance().fromImage(bi);
@@ -70,29 +71,41 @@ public final class ObjectDetection {
         }
     }
 
-    private String saveBoundingBoxImage(Image img, DetectedObjects detection, String[] targetClass, double probabilityThreshold)
-        throws IOException {
-    List<String> targetClassList = Arrays.asList(targetClass);
-    Path outputDir = Paths.get("src/main/resources/static/predict_img");
-    Files.createDirectories(outputDir);
-    img.drawBoundingBoxes(detection);
+    private String saveBoundingBoxImage(Image img, DetectedObjects detection, String[] targetClass,
+            double probabilityThreshold)
+            throws IOException {
+        List<String> targetClassList = Arrays.asList(targetClass);
+        Path outputDir = Paths.get("src/main/resources/static/predict_img");
+        deleteDirectoryRecursively(outputDir);
+        Files.createDirectories(outputDir);
+        img.drawBoundingBoxes(detection);
 
-    boolean shouldSave = detection.items().stream()
-        .anyMatch(item -> targetClassList.contains(item.getClassName()) && item.getProbability() > probabilityThreshold);
+        boolean shouldSave = detection.items().stream()
+                .anyMatch(item -> targetClassList.contains(item.getClassName())
+                        && item.getProbability() > probabilityThreshold);
 
-    if (shouldSave) {
-        count++;
-        Path imagePath = outputDir.resolve("detected-" + count + ".png");
-        img.save(Files.newOutputStream(imagePath), "png");
-        // Correct the image path to be web accessible
-        String webPath = "/predict_img/" + imagePath.getFileName().toString();
-        logger.info("Detected objects image has been saved in: {}", imagePath);
-        return webPath;
-    } else {
-        logger.info("No objects meeting the criteria {} were detected.");
-        return null;
+        if (shouldSave) {
+            count++;
+            Path imagePath = outputDir.resolve("detected-" + count + ".png");
+            img.save(Files.newOutputStream(imagePath), "png");
+            // Correct the image path to be web accessible
+            String webPath = "/predict_img/" + imagePath.getFileName().toString();
+            logger.info("Detected objects image has been saved in: {}", imagePath);
+            return webPath;
+        } else {
+            logger.info("No objects meeting the criteria {} were detected.");
+            return null;
+        }
     }
-}
 
+    private void deleteDirectoryRecursively(Path directory) throws IOException {
+        if (Files.exists(directory)) {
+            Files.walk(directory)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+            System.out.println("Deleted directory: " + directory);
+        }
+    }
 
 }
