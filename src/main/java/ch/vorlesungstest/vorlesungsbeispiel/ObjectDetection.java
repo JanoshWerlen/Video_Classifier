@@ -3,7 +3,6 @@ package ch.vorlesungstest.vorlesungsbeispiel;
 import ai.djl.Application;
 import ai.djl.ModelException;
 import ai.djl.inference.Predictor;
-import ai.djl.modality.Classifications.Classification;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
@@ -23,11 +22,11 @@ import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -43,49 +42,57 @@ public final class ObjectDetection {
         this.template = template;
     } // Constructor should not contain logic
 
-    public DetectedObjects predict(byte[] imageData, String targetClass, double probabilityThreshold) throws IOException, ModelException, TranslateException {
+    public DetectionResult predict(byte[] imageData, String[] targetClass, double probabilityThreshold)
+            throws IOException, ModelException, TranslateException {
+
+                for (int i = 0; i < targetClass.length; i++) {
+                    System.out.println("looking for " + targetClass[i]);
+                }
+                
+                
         InputStream is = new ByteArrayInputStream(imageData);
         BufferedImage bi = ImageIO.read(is);
         Image img = ImageFactory.getInstance().fromImage(bi);
-    
+
         Criteria<Image, DetectedObjects> criteria = Criteria.builder()
                 .optApplication(Application.CV.OBJECT_DETECTION)
                 .setTypes(Image.class, DetectedObjects.class)
                 .optFilter("backbone", "resnet50")
                 .optProgress(new ProgressBar())
                 .build();
-    
+
         try (ZooModel<Image, DetectedObjects> model = ModelZoo.loadModel(criteria);
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
-            saveBoundingBoxImage(img, detection, targetClass, probabilityThreshold);
+            String imagePath = saveBoundingBoxImage(img, detection, targetClass, probabilityThreshold);
             logger.info("Object Detection processing completed.");
-            return detection;
+            return new DetectionResult(detection, imagePath);
         }
     }
-    
 
-    private void saveBoundingBoxImage(Image img, DetectedObjects detection, String targetClass, double probabilityThreshold)
+    private String saveBoundingBoxImage(Image img, DetectedObjects detection, String[] targetClass, double probabilityThreshold)
         throws IOException {
-    Path outputDir = Paths.get("src\\main\\resources\\static\\predict_img");
+    List<String> targetClassList = Arrays.asList(targetClass);
+    Path outputDir = Paths.get("src/main/resources/static/predict_img");
     Files.createDirectories(outputDir);
     img.drawBoundingBoxes(detection);
 
-    // Check each detected object to see if it matches the criteria
     boolean shouldSave = detection.items().stream()
-        .anyMatch(item -> item.getClassName().equals(targetClass) && item.getProbability() > probabilityThreshold);
+        .anyMatch(item -> targetClassList.contains(item.getClassName()) && item.getProbability() > probabilityThreshold);
 
     if (shouldSave) {
         count++;
-        Path imagePath = outputDir.resolve("detected-" + targetClass +" "+ count +".png");
-        img.save(Files.newOutputStream(imagePath), "png"); // Save the image if conditions are met
+        Path imagePath = outputDir.resolve("detected-" + count + ".png");
+        img.save(Files.newOutputStream(imagePath), "png");
+        // Correct the image path to be web accessible
+        String webPath = "/predict_img/" + imagePath.getFileName().toString();
         logger.info("Detected objects image has been saved in: {}", imagePath);
-        template.convertAndSend("/topic/imageUpdate", imagePath.toString());
+        return webPath;
     } else {
-        logger.info("No objects meeting the criteria were detected.");
+        logger.info("No objects meeting the criteria {} were detected.");
+        return null;
     }
 }
-
 
 
 }

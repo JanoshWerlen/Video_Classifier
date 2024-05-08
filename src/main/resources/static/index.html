@@ -6,30 +6,20 @@
     <meta charset="utf-8" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="script.js" defer>  getFrames();</script>
+    <script src="script.js" defer>    
+    </script>
     <style>
-
-.result-item {
+        .results-display {
     border: 1px solid #ccc;
     padding: 10px;
-    margin-bottom: 10px;
     background-color: #f9f9f9;
+    height: 300px;  /* Ensure it matches the height of the frame container */
+    overflow-y: auto; /* Allows scrolling if content is too long */
 }
 
-#answerPart {
-    display: flex;
-    flex-direction: column;
-}
-
-#JSON_Display {
-    width: 50%; /* Adjust the width as needed */
-    border: 1px solid #ccc; /* Optional: adds border around the JSON box */
-    padding: 10px;
-    overflow-y: auto; /* Enables scrolling if content is too long */
-}
-#frameContainer {
-    width: 500px; /* Width of the image container */
-    height: 300px; /* Height of the image container */
+.image-display {
+    width: 100%; /* Utilizes full width of the column */
+    height: 300px; /* Fixed height to align with the results display */
     overflow: hidden; /* Keeps the image within the bounds of the container */
     display: flex;
     justify-content: center; /* Center image horizontally */
@@ -37,27 +27,26 @@
     border: 1px solid #ccc; /* Optional: adds a border around the container */
 }
 
-#frameContainer img {
+.image-display img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* Ensures the image is scaled to fit, not cropped */
 }
-
 
     </style>
 
 
 </head>
 
-  
+
 
 <body>
 
 
 
     <div class="container-fluid">
-        <h1>Footwear Classification</h1>
-        <p>DeepJavaLibrary (DJL) Demonstration by mosa</p>
+        <h1>Video Classification</h1>
+        <p>DeepJavaLibrary (DJL) Demonstration by werleja1</p>
 
         <form>
             <div class="form-group">
@@ -75,20 +64,42 @@
             </div>
         </form>
 
-        <div id="answerPart" style="visibility: visible;">
-            <p><strong>Results for high Probability:</strong></p>
-            <div style="display: flex; align-items: flex-start;">
-                <div id="JSON_Display" style="margin-right: 20px;">
-                    <!-- JSON content goes here -->
+        <form id="classificationForm">
+            <div class="form-group">
+                <label for="searchObject">Select Classification:</label>
+                <select id="searchObject" name="searchObject" class="form-control">
+                    <option value="dog">Dog</option>
+                    <option value="cat">Cat</option>
+                    <option value="bicycle">Bicycle</option>
+                    <option value="car">Car</option>
+                    <option value="person">Person</option>
+                </select>
+            </div>
+        </form>
+        
+        
+        
+
+        <div class="container-fluid">
+            <h1>Results</h1>
+        
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="JSON_Display" class="results-display">
+                        <!-- JSON content goes here -->
+                    </div>
                 </div>
-                <div id="frameContainer" style="width: 500px; height: 300px;">
-                    <!-- Image will be placed here -->
+                <div class="col-md-6">
+                    <div id="frameContainer" class="image-display">
+                        <!-- Image will be placed here -->
+                    </div>
                 </div>
             </div>
         </div>
         
 
- 
+
+
         <!-- Preview part seems unused for videos, ensure its usage or remove if not needed -->
         <div id="previewPart" style="display: none;">
             <p><strong>Analyzed Image:</strong></p>
