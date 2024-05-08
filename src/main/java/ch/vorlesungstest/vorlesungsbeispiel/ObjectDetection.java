@@ -66,11 +66,11 @@ public final class ObjectDetection {
 
     private void saveBoundingBoxImage(Image img, DetectedObjects detection)
             throws IOException {
-        Path outputDir = Paths.get("build/output");
+        Path outputDir = Paths.get("src\\main\\resources\\static\\predict_img");
         Files.createDirectories(outputDir);
         img.drawBoundingBoxes(detection);
 
-        Path imagePath = outputDir.resolve("detected-dog_bike_car.png");
+        Path imagePath = outputDir.resolve("detected.png");
 
         //Code here 
 
