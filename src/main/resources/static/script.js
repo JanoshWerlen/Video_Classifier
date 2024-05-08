@@ -101,19 +101,26 @@ function checkFiles(files) {
     const formData = new FormData();
     formData.append("image", file);
 
+    
     fetch('/analyze', {
         method: 'POST',
         body: formData
-    }).then(response => response.json())
-    .then(data => {
-        console.log('Detection Results:', data.detections);
-        console.log('Image Path:', data.imagePath);
-        displayResults(data); // Function to display each JSON element separately
-    })
-    .catch(error => {
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    }).then(data => {
+        if (data.detections && data.imagePath) {
+            displayResults(data);
+        } else {
+            throw new Error('Missing necessary data');
+        }
+    }).catch(error => {
         console.error('Error:', error);
-        document.getElementById('JSON_Display').innerHTML = 'Error processing the request.';
+        document.getElementById('JSON_Display').innerHTML = 'Error processing the request: ' + error.message;
     });
+    
 }
 
 
@@ -164,18 +171,28 @@ function checkVideo(files) {
     });
     
     
-}function displayResults(data) {
-    console.log("Logged data: " + data.imagePath);
-    const resultsContainer = document.getElementById('JSON_Display');
-    const imageContainer = document.getElementById('frameContainer');
+}
 
-    // Clear previous results and image
+
+function displayResults(data) {
+    console.log("Detection Results:", data.detections);
+    console.log("Image Path:", data.imagePath);
+
+    const resultsContainer = document.getElementById('JSON_Display');
+    const imgElement = document.getElementById('resultImage');
+
+    if (imgElement) {
+        imgElement.src = `http://localhost:3000${data.imagePath}`;
+        console.log("Image updated to:", imgElement.src);
+    } else {
+        console.error('Element with ID "resultImage" was not found.');
+    }
+
+    // Clear previous results
     resultsContainer.innerHTML = '';
-    imageContainer.innerHTML = '';
 
     // Display detection results if any
     if (data.detections) {
-        console.log("Data Detected");
         data.detections.forEach(detection => {
             const elementDiv = document.createElement('div');
             elementDiv.className = 'result-item';
@@ -185,16 +202,6 @@ function checkVideo(files) {
             `;
             resultsContainer.appendChild(elementDiv);
         });
-    }
-
-    // Display image if the path is available
-    if (data.imagePath) {
-        const img = document.createElement('img');
-        imgElement.src = `http://localhost:3000${data.imagePath}`; // Ensure the URL is correct
-        console.log("IMAGE PATH " + img.src)
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto'; // Maintain aspect ratio
-        imageContainer.appendChild(img); // Append the image element, not img.src
     }
 }
 
