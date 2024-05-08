@@ -19,10 +19,11 @@ document.addEventListener('DOMContentLoaded', function () {
         videoInput.addEventListener('change', function() {
             checkVideo(this.files);
         });
+
     }
 });
 
-const socket = new WebSocket('ws://localhost:8000');
+const socket = new WebSocket('ws://localhost:8081');
 
 socket.onmessage = function(event) {
     console.log("WebSocket message received:", event.data);
@@ -116,8 +117,6 @@ function checkFiles(files) {
 }
 
 
-
-
 function checkVideo(files) {
     console.log(files);
 
@@ -151,8 +150,13 @@ function checkVideo(files) {
         body: formData
     }).then(response => response.json())
     .then(data => {
-        console.log(data)
-        displayData(data); // Function to display each JSON element separately
+        if (data.detections && data.imagePath) {
+            console.log('Detection Results:', data.detections);
+            console.log('Image Path:', data.imagePath);
+            displayResults(data); // Update this function to handle display updates correctly
+        } else {
+            console.error('Invalid data received', data);
+        }
     })
     .catch(error => {
         console.error('Error:', error);
@@ -160,15 +164,18 @@ function checkVideo(files) {
     });
     
     
-}
-function displayResults(data) {
-
-    console.log("Logged data: " + data.imagePath)
+}function displayResults(data) {
+    console.log("Logged data: " + data.imagePath);
     const resultsContainer = document.getElementById('JSON_Display');
     const imageContainer = document.getElementById('frameContainer');
-    resultsContainer.innerHTML = ''; // Clear previous results
 
+    // Clear previous results and image
+    resultsContainer.innerHTML = '';
+    imageContainer.innerHTML = '';
+
+    // Display detection results if any
     if (data.detections) {
+        console.log("Data Detected");
         data.detections.forEach(detection => {
             const elementDiv = document.createElement('div');
             elementDiv.className = 'result-item';
@@ -180,15 +187,17 @@ function displayResults(data) {
         });
     }
 
+    // Display image if the path is available
     if (data.imagePath) {
-        imageContainer.innerHTML = ''; // Clear previous image if any
         const img = document.createElement('img');
-        img.src = data.imagePath; // Use the corrected path
+        imgElement.src = `http://localhost:3000${data.imagePath}`; // Ensure the URL is correct
+        console.log("IMAGE PATH " + img.src)
         img.style.maxWidth = '100%';
-        img.style.maxHeight = '100%';
-        imageContainer.appendChild(img);
+        img.style.height = 'auto'; // Maintain aspect ratio
+        imageContainer.appendChild(img); // Append the image element, not img.src
     }
 }
+
 
 function displayData(data) {
     const resultsDiv = document.getElementById('results');

@@ -81,7 +81,7 @@ public class ClassificationController_OD {
 
             System.out.println("\n");
 
-            VorlesungsbeispielApplication.notifyWebSocketServer();
+           // VorlesungsbeispielApplication.notifyWebSocketServer();
             return ResponseEntity.ok(json.toString());
 
         } catch (Exception e) {
@@ -205,20 +205,5 @@ public Map<String, Integer> handleFileUpload(@RequestParam("video") MultipartFil
         }
         return x;
     }
-    /*
-     * @GetMapping("/getFrames")
-     * public ResponseEntity<List<String>> getFramePaths() {
-     * try {
-     * Path framesDir = Paths.get("src\\main\\resources\\static\\HighProb_Frames");
-     * List<String> fileNames = Files.walk(framesDir)
-     * .filter(Files::isRegularFile)
-     * .map(path -> path.getFileName().toString())
-     * .collect(Collectors.toList());
-     * return ResponseEntity.ok(fileNames);
-     * } catch (IOException e) {
-     * e.printStackTrace();
-     * return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-     * }
-     * }
-     */
+   
 }

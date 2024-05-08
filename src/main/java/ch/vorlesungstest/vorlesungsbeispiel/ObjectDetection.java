@@ -44,13 +44,15 @@ import org.apache.http.HttpResponse;
 @Component
 public final class ObjectDetection {
 
+    private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
+/* 
     private final SimpMessagingTemplate template;
 
-    private static final Logger logger = LoggerFactory.getLogger(ObjectDetection.class);
+    
 
     public ObjectDetection(SimpMessagingTemplate template) {
         this.template = template;
-    }
+    }*/
 
     public DetectionResult predict(byte[] imageData, String[] targetClass, double probabilityThreshold)
             throws IOException, ModelException, TranslateException {
@@ -74,8 +76,9 @@ public final class ObjectDetection {
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
             String imagePath = saveBoundingBoxImage(img, detection, targetClass, probabilityThreshold);
-            logger.info("Object Detection processing completed.");
             VorlesungsbeispielApplication.notifyWebSocketServer();
+            logger.info("Object Detection processing completed.");
+           // VorlesungsbeispielApplication.notifyWebSocketServer();
             return new DetectionResult(detection, imagePath);
         }
     }
