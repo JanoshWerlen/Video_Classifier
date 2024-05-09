@@ -2,43 +2,75 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchSelect = document.getElementById('searchObject');
 
     // Handle change event for searchObject dropdown
-    searchSelect.addEventListener('change', function() {
+    searchSelect.addEventListener('change', function () {
         updateSearchObject(this.value);
     });
 
     // Attach event listeners for file uploads
     const imageInput = document.getElementById('image');
     if (imageInput) {
-        imageInput.addEventListener('change', function() {
+        imageInput.addEventListener('change', function () {
             checkFiles(this.files);
         });
     }
 
     const videoInput = document.getElementById('video');
     if (videoInput) {
-        videoInput.addEventListener('change', function() {
+        videoInput.addEventListener('change', function () {
             checkVideo(this.files);
         });
 
     }
 });
-
 const socket = new WebSocket('ws://localhost:8081');
 
-socket.onmessage = function(event) {
+socket.onmessage = function (event) {
     console.log("WebSocket message received:", event.data);
-    if (event.data === 'update') {
-        updateImage();
+    try {
+        // Assuming you might expand to other JSON messages in the future
+        const data = JSON.parse(event.data);
+        if (data.command === 'update') {
+            console.log("Update command received, updating image.");
+            updateImage();
+        }
+    } catch (e) {
+        // Fallback if the data is not JSON or not the expected JSON
+        if (event.data === 'update') {
+            console.log("Update command received, updating image.");
+            updateImage();
+        }
     }
 };
 
+socket.onerror = function (error) {
+    console.error("WebSocket error observed:", error);
+};
+
+socket.onopen = function () {
+    console.log("WebSocket connection established");
+};
+
+socket.onclose = function (event) {
+    console.log("WebSocket is closed now.", event.reason);
+};
+
+
+
 function updateImage() {
+    console.log('Attempting to update image...');
     const imgElement = document.getElementById('dynamicImage');
     if (imgElement) {
+
+        imgElement.onload = function () {
+            console.log("Image successfully loaded.");
+        };
+        imgElement.onerror = function () {
+            console.error("Failed to load image.");
+        };
         const imageUrl = 'http://localhost:3000/display.png';
         const timestamp = new Date().getTime(); // Cache busting
         const newSrc = `${imageUrl}?${timestamp}`;
-        console.log('Updating image src to:', newSrc);  // Debugging log
+        console.log('Updating image src to:', newSrc);
         imgElement.src = newSrc;
     } else {
         console.error('Element with ID "dynamicImage" was not found.');
@@ -47,11 +79,13 @@ function updateImage() {
 
 
 
+
+
 // Call updateImage at regular intervals
 // Also call updateImage on page load
 document.addEventListener('DOMContentLoaded', updateImage);
 
-
+/*
 function updateSearchObject(searchObject) {
     const formData = new FormData();
     formData.append('searchObject', searchObject);
@@ -78,7 +112,7 @@ function getCsrfToken() {
     }
     return null;
 }
-
+*/
 
 
 function checkFiles(files) {
@@ -101,7 +135,7 @@ function checkFiles(files) {
     const formData = new FormData();
     formData.append("image", file);
 
-    
+
     fetch('/analyze', {
         method: 'POST',
         body: formData
@@ -120,7 +154,7 @@ function checkFiles(files) {
         console.error('Error:', error);
         document.getElementById('JSON_Display').innerHTML = 'Error processing the request: ' + error.message;
     });
-    
+
 }
 
 
@@ -156,21 +190,21 @@ function checkVideo(files) {
         method: 'POST',
         body: formData
     }).then(response => response.json())
-    .then(data => {
-        if (data.detections && data.imagePath) {
-            console.log('Detection Results:', data.detections);
-            console.log('Image Path:', data.imagePath);
-            displayResults(data); // Update this function to handle display updates correctly
-        } else {
-            console.error('Invalid data received', data);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('JSON_Display').innerHTML = 'Error processing the request.';
-    });
-    
-    
+        .then(data => {
+            if (data.detections && data.imagePath) {
+                console.log('Detection Results:', data.detections);
+                console.log('Image Path:', data.imagePath);
+                displayResults(data); // Update this function to handle display updates correctly
+            } else {
+                console.error('Invalid data received', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('JSON_Display').innerHTML = 'Error processing the request.';
+        });
+
+
 }
 
 
@@ -206,6 +240,8 @@ function displayResults(data) {
 }
 
 
+
+
 function displayData(data) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = ''; // Clear previous results
@@ -215,7 +251,8 @@ function displayData(data) {
         const resultItem = document.createElement('div');
         resultItem.textContent = `${key}: ${data[key]}`;
         resultsDiv.appendChild(resultItem);
-    });}
+    });
+}
 
 
 

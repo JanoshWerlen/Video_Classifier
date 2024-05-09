@@ -30,26 +30,32 @@ app.use((req, res, next) => {
     next();
 });
 
-// WebSocket server on a different port
 const wss = new WebSocket.Server({ port: 8081 });
 wss.on('connection', function connection(ws) {
+    console.log('WebSocket client connected');
     ws.on('message', function incoming(message) {
         console.log('received: %s', message);
     });
 });
 
+
 // POST route to trigger updates to clients
 app.post('/notify', (req, res) => {
     console.log("Received notification from Java backend");
+    let count = 0;
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             client.send('update');
+            count++;
         }
     });
+    console.log(`Update sent to ${count} clients.`);
     res.status(200).send("Notification sent to all clients.");
 });
 
+
 // POST endpoint for image analysis
+/*
 app.post('/analyze', upload.single('image'), (req, res) => {
     const file = req.file;
     if (!file) {
@@ -64,7 +70,7 @@ app.post('/analyze', upload.single('image'), (req, res) => {
 
     res.json(result);
 });
-
+*/
 // Listen on HTTP port
 app.listen(PORT, () => {
     console.log(`HTTP server running on port ${PORT}`);

@@ -108,7 +108,6 @@ public Map<String, Integer> handleFileUpload(@RequestParam("video") MultipartFil
 
         List<Path> frames = extractor.extractFrames(tempFile.toString(), fps, Frames_DIR);
         JSONArray resultsForHighProb = new JSONArray();
-
         for (Path framePath : frames) {
             byte[] imageData = Files.readAllBytes(framePath);
             try {
@@ -124,7 +123,7 @@ public Map<String, Integer> handleFileUpload(@RequestParam("video") MultipartFil
                 JSONObject frameResult = new JSONObject();
                 frameResult.put("detections", detections);
                 frameResult.put("imagePath", detectionResult.getImagePath());
-
+                VorlesungsbeispielApplication.notifyWebSocketServer();
                 resultsForHighProb.put(frameResult);
             } catch (Exception e) {
                 e.printStackTrace();

@@ -76,9 +76,8 @@ public final class ObjectDetection {
                 Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
             DetectedObjects detection = predictor.predict(img);
             String imagePath = saveBoundingBoxImage(img, detection, targetClass, probabilityThreshold);
-            VorlesungsbeispielApplication.notifyWebSocketServer();
             logger.info("Object Detection processing completed.");
-           // VorlesungsbeispielApplication.notifyWebSocketServer();
+            VorlesungsbeispielApplication.notifyWebSocketServer();
             return new DetectionResult(detection, imagePath);
         }
     }
